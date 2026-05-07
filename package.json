@@ -1,0 +1,58 @@
+{
+  "name": "@capitalthought/relationship-radar-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Relationship Radar (relradar.ai) — query a person, suggest identity disambiguations, run a deep PI investigation, check source health.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "relationship-radar-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc && chmod +x dist/index.js",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/capitalthought/relationship-radar-mcp.git"
+  },
+  "homepage": "https://github.com/capitalthought/relationship-radar-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/capitalthought/relationship-radar-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "relationship-radar",
+    "relradar",
+    "agent-tools",
+    "anthropic",
+    "claude",
+    "capital-factory"
+  ],
+  "author": "Joshua Baer",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  }
+}
