@@ -1,0 +1,35 @@
+name: Publish to npm
+
+# Tag-triggered: pushing a tag matching `v*` (e.g. `v0.2.0`, `v1.0.0`) cuts a
+# release. Manual flow:
+#   1. Bump `version` in package.json + `[X.Y.Z]` heading in CHANGELOG.md
+#   2. git commit -am "release: vX.Y.Z" && git tag vX.Y.Z && git push --follow-tags
+#   3. This workflow runs: ci/build/publish to npm under @capitalthought scope.
+#
+# NPM_TOKEN is a granular access token scoped to @capitalthought with
+# bypass-2fa enabled (see ~/icloud/Claude/ref-npm-publishing.md). Mirror of
+# bizzabo-mcp + multipov-mcp-server publish workflow — same proven shape.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

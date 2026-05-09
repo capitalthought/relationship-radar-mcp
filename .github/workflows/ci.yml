@@ -1,0 +1,22 @@
+name: CI
+
+# PR + main-push gate: typecheck, build, and run unit tests. Mirrors the
+# bizzabo-mcp + multipov-mcp-server pattern. The publish workflow runs on
+# tag push, NOT on main merge — bumping the version is a deliberate ship.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
