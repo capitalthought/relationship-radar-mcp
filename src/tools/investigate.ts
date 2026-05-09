@@ -19,10 +19,17 @@ export function registerInvestigateTool(server: McpServer, client: RadarClient):
           .describe(
             "Investigation depth — quick (2-3 iterations, ~$0.10), standard (4-5 iterations, ~$0.30, default), thorough (6+ iterations, ~$0.75). Higher depth = more cross-source evidence but linearly higher cost.",
           ),
+        org_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe(
+            "Optional tenant org id (Phase A multi-tenant). Omit to use the bearer's default org. See https://relradar.ai/AGENTS.md § Multi-tenant authentication & tenancy.",
+          ),
       }),
     },
-    async ({ name, company, email, depth }) => {
-      const result = await client.investigate({ name, company, email, depth });
+    async ({ name, company, email, depth, org_id }) => {
+      const result = await client.investigate({ name, company, email, depth, org_id });
       if (isApiError(result)) {
         return {
           content: [{ type: "text" as const, text: JSON.stringify(result) }],

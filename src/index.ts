@@ -44,7 +44,7 @@ if (!token) {
 const client = new RadarClient({ token, baseUrl });
 const server = new McpServer({
   name: "relationship-radar",
-  version: "0.1.0",
+  version: "0.2.0",
 });
 
 registerQueryTools(server, client);

@@ -61,8 +61,9 @@ export class RadarClient {
     method: "GET" | "POST",
     path: string,
     body?: unknown,
+    orgId?: string,
   ): Promise<T | RadarApiError> {
-    const url = this.baseUrl + path;
+    const url = this.baseUrl + path + (orgId ? (path.includes("?") ? "&" : "?") + "org_id=" + encodeURIComponent(orgId) : "");
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
@@ -109,13 +110,20 @@ export class RadarClient {
     company?: string;
     email?: string;
     refresh_sources?: string[];
+    org_id?: string;
   }): Promise<unknown | RadarApiError> {
-    return this.request("POST", "/query", input);
+    const { org_id, ...body } = input;
+    return this.request("POST", "/query", body, org_id);
   }
 
   /** POST /suggest — identity disambiguation candidates. */
-  async suggest(input: { name: string; company?: string }): Promise<unknown | RadarApiError> {
-    return this.request("POST", "/suggest", input);
+  async suggest(input: {
+    name: string;
+    company?: string;
+    org_id?: string;
+  }): Promise<unknown | RadarApiError> {
+    const { org_id, ...body } = input;
+    return this.request("POST", "/suggest", body, org_id);
   }
 
   /** POST /api/investigate — deep PI agent investigation. */
@@ -124,17 +132,19 @@ export class RadarClient {
     company?: string;
     email?: string;
     depth?: "quick" | "standard" | "thorough";
+    org_id?: string;
   }): Promise<unknown | RadarApiError> {
-    return this.request("POST", "/api/investigate", input);
+    const { org_id, ...body } = input;
+    return this.request("POST", "/api/investigate", body, org_id);
   }
 
   /** GET /health/detail — module_health snapshot (cron last-run, errors). */
-  async health(): Promise<unknown | RadarApiError> {
-    return this.request("GET", "/health/detail");
+  async health(input?: { org_id?: string }): Promise<unknown | RadarApiError> {
+    return this.request("GET", "/health/detail", undefined, input?.org_id);
   }
 
   /** GET /admin/source-health — per-source last-status snapshot. */
-  async sourceHealth(): Promise<unknown | RadarApiError> {
-    return this.request("GET", "/admin/source-health");
+  async sourceHealth(input?: { org_id?: string }): Promise<unknown | RadarApiError> {
+    return this.request("GET", "/admin/source-health", undefined, input?.org_id);
   }
 }

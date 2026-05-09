@@ -19,10 +19,17 @@ export function registerQueryTools(server: McpServer, client: RadarClient): void
           .describe(
             "Per-source cache invalidation: pass a list of source names (e.g. ['gmail', 'hubspot']) to force a fresh fetch instead of using the 10-minute KV cache.",
           ),
+        org_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe(
+            "Optional tenant org id (Phase A multi-tenant). Omit to use the bearer's default org (Capital Factory for the legacy DASHBOARD_TOKEN). When provided, the worker scopes the query to that tenant's credentials + plan-tier source set. See https://relradar.ai/AGENTS.md § Multi-tenant authentication & tenancy.",
+          ),
       }),
     },
-    async ({ name, company, email, refresh_sources }) => {
-      const result = await client.query({ name, company, email, refresh_sources });
+    async ({ name, company, email, refresh_sources, org_id }) => {
+      const result = await client.query({ name, company, email, refresh_sources, org_id });
       if (isApiError(result)) {
         return {
           content: [{ type: "text" as const, text: JSON.stringify(result) }],
@@ -44,10 +51,17 @@ export function registerQueryTools(server: McpServer, client: RadarClient): void
       inputSchema: z.object({
         name: z.string().min(1).describe("Person's name. Can be partial (e.g. 'Sarah') — the response will rank candidates."),
         company: z.string().optional().describe("Company hint to narrow the candidate set."),
+        org_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe(
+            "Optional tenant org id (Phase A multi-tenant). Omit to use the bearer's default org. See https://relradar.ai/AGENTS.md § Multi-tenant authentication & tenancy.",
+          ),
       }),
     },
-    async ({ name, company }) => {
-      const result = await client.suggest({ name, company });
+    async ({ name, company, org_id }) => {
+      const result = await client.suggest({ name, company, org_id });
       if (isApiError(result)) {
         return {
           content: [{ type: "text" as const, text: JSON.stringify(result) }],
