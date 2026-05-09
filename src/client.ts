@@ -147,4 +147,38 @@ export class RadarClient {
   async sourceHealth(input?: { org_id?: string }): Promise<unknown | RadarApiError> {
     return this.request("GET", "/admin/source-health", undefined, input?.org_id);
   }
+
+  /**
+   * GET /admin/orgs/<id> — Phase A.8 v2 super-admin per-org operator readout.
+   *
+   * Returns org metadata, subscription state, member roster, connected
+   * sources, today's usage, and a synthesized alerts[] array. Super-admin
+   * auth required (DASHBOARD_TOKEN bearer or Josh's cookie). 404 with
+   * `code: "org_not_found"` when the UUID isn't in `orgs`.
+   *
+   * `orgId` is interpolated into the path — the optional `org_id` query
+   * param plumbed by `request()` is for *tenancy scoping*, which is not
+   * meaningful here (the endpoint is super-admin only and reads any org).
+   */
+  async getOrgPrep(orgId: string): Promise<unknown | RadarApiError> {
+    return this.request("GET", `/admin/orgs/${encodeURIComponent(orgId)}`);
+  }
+
+  /**
+   * POST /account/api-keys — Phase A.4 owner-only mint endpoint.
+   *
+   * Mints `rk_<43char>` token, returned ONCE in the response. SHA-256 hash
+   * stored in `org_api_keys`; plaintext never persisted. Owner role required.
+   *
+   * Caveat: with the legacy `DASHBOARD_TOKEN` bearer, the worker locks the
+   * mint to `DEFAULT_ORG_ID` (see src/radar/auth.ts:583-625). The `orgId`
+   * argument is therefore cosmetic for that bearer flow and becomes
+   * meaningful only once tenant `rk_` tokens exist post-signup.
+   */
+  async mintApiKey(
+    orgId: string,
+    body: { label?: string; expires_at?: string } = {},
+  ): Promise<unknown | RadarApiError> {
+    return this.request("POST", "/account/api-keys", body, orgId);
+  }
 }

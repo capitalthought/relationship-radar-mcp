@@ -2,6 +2,27 @@
 
 All notable changes to `@capitalthought/relationship-radar-mcp` will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-05-09
+
+### Added
+
+- `radar_org_prep({ org_id })` — pre-flight org snapshot for an agent acting on behalf of a tenant. Wraps `GET /admin/orgs/<id>` (Phase A.8 v2 super-admin endpoint). Returns org metadata, subscription state, member roster, connected sources, today's usage, and a synthesized `alerts[]` array (`payment_past_due`, `subscription_canceled`, `trial_ends_in_<n>d`, `<source>_token_expires_in_<n>d`, `using_without_active_sub`). Backed by worker commit `c291e2a`.
+- `radar_mint_api_key({ org_id, label?, expires_at? })` — mint a new per-org `rk_<token>` for service-to-service calls. Wraps `POST /account/api-keys` (Phase A.4 owner-only endpoint). Token is returned ONCE in the response; SHA-256 hash is persisted to `org_api_keys`, plaintext never. The MCP tool prepends a `⚠️ TOKEN SHOWN ONCE. SAVE IT NOW.` header to the response. Backed by worker commit `b879ef6`.
+
+### Caveats
+
+- For the legacy `DASHBOARD_TOKEN` bearer, the worker locks `radar_mint_api_key` to `DEFAULT_ORG_ID` regardless of the `org_id` arg (see `src/radar/auth.ts:583-625`). The `org_id` parameter therefore becomes meaningful only once tenant `rk_` tokens exist post-signup. Documented in the tool description.
+
+### Tests
+
+- 10 new tests covering the two new client methods — URL shape, body shape, Bearer auth, GET vs POST, path encoding, 404/403/401/400 error paths, optional-field forwarding, and empty-body handling. All 25 tests passing.
+
+### Backwards compatibility
+
+- 100% backwards-compatible with 0.2.0. The existing 5 tools and their schemas are unchanged. No new env vars — `RADAR_TOKEN` continues to be the only required configuration.
+
+[0.3.0]: https://github.com/capitalthought/relationship-radar-mcp/releases/tag/v0.3.0
+
 ## [0.2.0] — 2026-05-09
 
 ### Added
@@ -19,7 +40,7 @@ All notable changes to `@capitalthought/relationship-radar-mcp` will be document
 
 ### Deferred to 0.3.0
 
-- Tools `radar_org_prep` and `radar_mint_api_key` deferred to 0.3.0 pending Phase A.4 (per-org API key mint endpoint) + Phase A.8 (`/admin/orgs/<id>` admin endpoints) backend work.
+- Tools `radar_org_prep` and `radar_mint_api_key` deferred to 0.3.0 pending Phase A.4 (per-org API key mint endpoint) + Phase A.8 (`/admin/orgs/<id>` admin endpoints) backend work. **Shipped in 0.3.0 below.**
 
 [0.2.0]: https://github.com/capitalthought/relationship-radar-mcp/releases/tag/v0.2.0
 

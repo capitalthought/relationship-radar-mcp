@@ -45,6 +45,8 @@ Or any MCP-compatible host (Claude Desktop, Cursor, etc.):
 | `investigate_person` | `POST /api/investigate` | Deep iterative PI agent — picks sources adaptively based on findings, returns a verified identity profile with an evidence chain. Slower + more expensive than `query_person`. Reserve for high-stakes verification. |
 | `get_health` | `GET /health/detail` | Cron + `module_health` snapshot. Use to verify radar is healthy before relying on output for high-stakes work. |
 | `get_source_health` | `GET /admin/source-health` | Per-source last-status. Interpret a partial dossier — sources missing from output show up here as `error` or `skipped`. NOTE: `no_data` is healthy (source ran cleanly, just no matches). |
+| `radar_org_prep` | `GET /admin/orgs/<id>` | Pre-flight org snapshot — plan, subscription, members, connected sources, today's usage, alerts. Super-admin only. Call before any org-scoped action. |
+| `radar_mint_api_key` | `POST /account/api-keys` | Mint a new per-org `rk_<token>`. Returned ONCE — caller must store it. Owner role required. With the legacy `DASHBOARD_TOKEN` bearer the `org_id` arg is cosmetic until tenant `rk_` tokens exist. |
 
 ## Example
 
