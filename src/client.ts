@@ -138,6 +138,50 @@ export class RadarClient {
     return this.request("POST", "/api/investigate", body, org_id);
   }
 
+  // ---- Phase Co.2 company-mode (kind:"company" discriminator on /query, /suggest, /api/investigate) ----
+
+  /** POST /query — full company dossier (kind:"company" payload). */
+  async queryCompany(input: {
+    name: string;
+    domain?: string;
+    jurisdictions?: string[];
+    refresh_sources?: string[];
+    org_id?: string;
+  }): Promise<unknown | RadarApiError> {
+    const { org_id, refresh_sources, name, domain, jurisdictions } = input;
+    const query: Record<string, unknown> = { name };
+    if (domain !== undefined) query.domain = domain;
+    if (jurisdictions !== undefined) query.jurisdictions = jurisdictions;
+    const body: Record<string, unknown> = { kind: "company", query };
+    if (refresh_sources !== undefined) body.refresh_sources = refresh_sources;
+    return this.request("POST", "/query", body, org_id);
+  }
+
+  /** POST /suggest — company identity-disambiguation candidates. */
+  async suggestCompanies(input: {
+    name: string;
+    org_id?: string;
+  }): Promise<unknown | RadarApiError> {
+    const { org_id, name } = input;
+    const body = { kind: "company", query: { name } };
+    return this.request("POST", "/suggest", body, org_id);
+  }
+
+  /** POST /api/investigate — deep company investigation (kind:"company" payload). */
+  async investigateCompany(input: {
+    name: string;
+    domain?: string;
+    depth?: "quick" | "standard" | "thorough";
+    org_id?: string;
+  }): Promise<unknown | RadarApiError> {
+    const { org_id, depth, name, domain } = input;
+    const query: Record<string, unknown> = { name };
+    if (domain !== undefined) query.domain = domain;
+    const body: Record<string, unknown> = { kind: "company", query };
+    if (depth !== undefined) body.depth = depth;
+    return this.request("POST", "/api/investigate", body, org_id);
+  }
+
   /** GET /health/detail — module_health snapshot (cron last-run, errors). */
   async health(input?: { org_id?: string }): Promise<unknown | RadarApiError> {
     return this.request("GET", "/health/detail", undefined, input?.org_id);

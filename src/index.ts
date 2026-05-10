@@ -2,12 +2,15 @@
 /**
  * @capitalthought/relationship-radar-mcp — MCP server for Relationship Radar.
  *
- * Wraps the relradar.ai HTTP API (https://relradar.ai/AGENTS.md) as 7 verb-
+ * Wraps the relradar.ai HTTP API (https://relradar.ai/AGENTS.md) as 10 verb-
  * first MCP tools:
  *
- *   - query_person          full dossier (POST /query)
- *   - suggest_identities    cheap disambiguation (POST /suggest)
- *   - investigate_person    deep PI agent (POST /api/investigate)
+ *   - query_person          full person dossier (POST /query)
+ *   - suggest_identities    cheap person disambiguation (POST /suggest)
+ *   - investigate_person    deep PI agent on a person (POST /api/investigate)
+ *   - query_company         full company dossier (POST /query, kind:"company")
+ *   - suggest_companies     cheap company disambiguation (POST /suggest, kind:"company")
+ *   - investigate_company   deep PI agent on a company (POST /api/investigate, kind:"company")
  *   - get_health            cron + module_health (GET /health/detail)
  *   - get_source_health     per-source last-status (GET /admin/source-health)
  *   - radar_org_prep        per-org operator readout (GET /admin/orgs/<id>)
@@ -29,6 +32,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { RadarClient } from "./client.js";
 import { registerQueryTools } from "./tools/query.js";
 import { registerInvestigateTool } from "./tools/investigate.js";
+import { registerCompanyTools } from "./tools/company.js";
 import { registerHealthTools } from "./tools/health.js";
 import { registerOrgPrepTool } from "./tools/org-prep.js";
 import { registerMintApiKeyTool } from "./tools/api-keys.js";
@@ -48,11 +52,12 @@ if (!token) {
 const client = new RadarClient({ token, baseUrl });
 const server = new McpServer({
   name: "relationship-radar",
-  version: "0.3.0",
+  version: "0.4.0",
 });
 
 registerQueryTools(server, client);
 registerInvestigateTool(server, client);
+registerCompanyTools(server, client);
 registerHealthTools(server, client);
 registerOrgPrepTool(server, client);
 registerMintApiKeyTool(server, client);

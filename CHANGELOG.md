@@ -2,6 +2,28 @@
 
 All notable changes to `@capitalthought/relationship-radar-mcp` will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] — 2026-05-09
+
+### Added
+
+Phase Co.2 company-mode tools — three new tools that mirror the existing person trio for the `kind: "company"` discriminator on the relradar.ai HTTP API. Same auth (`RADAR_TOKEN` bearer), same response shape (`RadarReport`), same `org_id` multi-tenant plumbing.
+
+- `query_company({ name, domain?, jurisdictions?, refresh_sources?, org_id? })` — full company dossier. Wraps `POST /query` with body `{ kind: "company", query: { name, domain?, jurisdictions? } }`. Synthesizes Crunchbase, OpenCorporates, SOS / business registrations, news, web, HubSpot, Airtable, Asana, and Gmail mentions into a corporate intel brief.
+- `suggest_companies({ name, org_id? })` — cheap company disambiguation pre-flight. Wraps `POST /suggest` with body `{ kind: "company", query: { name } }`. Returns ranked candidates (with domain + jurisdiction hints + confidence scores). Per the Phase Co.2 spec, the response may include mixed-kind candidates — agents should check each candidate's `kind` field.
+- `investigate_company({ name, domain?, depth?, org_id? })` — deep PI-agent investigation. Wraps `POST /api/investigate` with body `{ kind: "company", query: { name, domain? }, depth? }`. Same depth options as person mode (`quick` / `standard` / `thorough`).
+
+Backed by the relationship-radar Worker's Option C dispatch on `/query` (shipped 2026-05-09) — the backend auto-detects the `kind: "company"` discriminator and routes to the company-mode synthesis path.
+
+### Tests
+
+- 11 new tests covering the 3 new client methods — URL shape, body discriminator (`kind: "company"`), nested `query{}` envelope (name / domain / jurisdictions), top-level `refresh_sources` and `depth` placement, `org_id` query-param plumbing, body cleanliness (`org_id` never leaks into POST bodies), and HTTP error → `RadarApiError` conversion. All 34 tests passing.
+
+### Backwards compatibility
+
+- 100% backwards-compatible with 0.3.0. The 7 existing tools and their schemas are unchanged. No new env vars — `RADAR_TOKEN` continues to be the only required configuration.
+
+[0.4.0]: https://github.com/capitalthought/relationship-radar-mcp/releases/tag/v0.4.0
+
 ## [0.3.0] — 2026-05-09
 
 ### Added

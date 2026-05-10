@@ -294,4 +294,137 @@ describe("RadarClient", () => {
       if (isApiError(result)) expect(result.status).toBe(400);
     });
   });
+
+  // ---- 0.4.0: company-mode tools (Phase Co.2 kind:"company" discriminator) ----
+
+  describe("queryCompany", () => {
+    it("POSTs /query with kind:company + nested query{name}", async () => {
+      fetchSpy.mockResolvedValueOnce(ok({ status: "ok" }));
+      const c = new RadarClient({ token: "tok" });
+      await c.queryCompany({ name: "Acme Robotics" });
+      const url = fetchSpy.mock.calls[0][0] as string;
+      const init = fetchSpy.mock.calls[0][1] as RequestInit;
+      expect(url).toBe("https://relradar.ai/query");
+      expect(init.method).toBe("POST");
+      expect(JSON.parse(init.body as string)).toEqual({
+        kind: "company",
+        query: { name: "Acme Robotics" },
+      });
+    });
+
+    it("forwards domain + jurisdictions inside nested query{}", async () => {
+      fetchSpy.mockResolvedValueOnce(ok({ status: "ok" }));
+      const c = new RadarClient({ token: "tok" });
+      await c.queryCompany({
+        name: "Acme",
+        domain: "acme.com",
+        jurisdictions: ["TX", "DE"],
+      });
+      expect(JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string)).toEqual({
+        kind: "company",
+        query: { name: "Acme", domain: "acme.com", jurisdictions: ["TX", "DE"] },
+      });
+    });
+
+    it("places refresh_sources at the top level (not inside query{})", async () => {
+      fetchSpy.mockResolvedValueOnce(ok({ status: "ok" }));
+      const c = new RadarClient({ token: "tok" });
+      await c.queryCompany({
+        name: "Acme",
+        refresh_sources: ["crunchbase", "opencorporates"],
+      });
+      expect(JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string)).toEqual({
+        kind: "company",
+        query: { name: "Acme" },
+        refresh_sources: ["crunchbase", "opencorporates"],
+      });
+    });
+
+    it("appends ?org_id when provided + does not leak org_id into body", async () => {
+      fetchSpy.mockResolvedValueOnce(ok({ status: "ok" }));
+      const c = new RadarClient({ token: "tok" });
+      await c.queryCompany({ name: "Acme", org_id: ORG_UUID });
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        `https://relradar.ai/query?org_id=${ORG_UUID}`,
+      );
+      const body = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string);
+      expect(body).toEqual({ kind: "company", query: { name: "Acme" } });
+      expect((body as { org_id?: unknown }).org_id).toBeUndefined();
+    });
+
+    it("returns RadarApiError on non-2xx", async () => {
+      fetchSpy.mockResolvedValueOnce(err(500, { status: "error" }));
+      const c = new RadarClient({ token: "tok" });
+      const result = await c.queryCompany({ name: "Acme" });
+      expect(isApiError(result)).toBe(true);
+      if (isApiError(result)) expect(result.status).toBe(500);
+    });
+  });
+
+  describe("suggestCompanies", () => {
+    it("POSTs /suggest with kind:company + nested query{name}", async () => {
+      fetchSpy.mockResolvedValueOnce(ok({ candidates: [] }));
+      const c = new RadarClient({ token: "tok" });
+      await c.suggestCompanies({ name: "Acme" });
+      const init = fetchSpy.mock.calls[0][1] as RequestInit;
+      expect(fetchSpy.mock.calls[0][0]).toBe("https://relradar.ai/suggest");
+      expect(init.method).toBe("POST");
+      expect(JSON.parse(init.body as string)).toEqual({
+        kind: "company",
+        query: { name: "Acme" },
+      });
+    });
+
+    it("appends ?org_id when provided + does not leak org_id into body", async () => {
+      fetchSpy.mockResolvedValueOnce(ok({ candidates: [] }));
+      const c = new RadarClient({ token: "tok" });
+      await c.suggestCompanies({ name: "Acme", org_id: ORG_UUID });
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        `https://relradar.ai/suggest?org_id=${ORG_UUID}`,
+      );
+      const body = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string);
+      expect((body as { org_id?: unknown }).org_id).toBeUndefined();
+    });
+  });
+
+  describe("investigateCompany", () => {
+    it("POSTs /api/investigate with kind:company + nested query{name}", async () => {
+      fetchSpy.mockResolvedValueOnce(ok({ status: "ok" }));
+      const c = new RadarClient({ token: "tok" });
+      await c.investigateCompany({ name: "Acme" });
+      const init = fetchSpy.mock.calls[0][1] as RequestInit;
+      expect(fetchSpy.mock.calls[0][0]).toBe("https://relradar.ai/api/investigate");
+      expect(init.method).toBe("POST");
+      expect(JSON.parse(init.body as string)).toEqual({
+        kind: "company",
+        query: { name: "Acme" },
+      });
+    });
+
+    it("forwards domain inside query{} and depth at the top level", async () => {
+      fetchSpy.mockResolvedValueOnce(ok({ status: "ok" }));
+      const c = new RadarClient({ token: "tok" });
+      await c.investigateCompany({
+        name: "Acme",
+        domain: "acme.com",
+        depth: "thorough",
+      });
+      expect(JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string)).toEqual({
+        kind: "company",
+        query: { name: "Acme", domain: "acme.com" },
+        depth: "thorough",
+      });
+    });
+
+    it("appends ?org_id when provided + does not leak org_id into body", async () => {
+      fetchSpy.mockResolvedValueOnce(ok({ status: "ok" }));
+      const c = new RadarClient({ token: "tok" });
+      await c.investigateCompany({ name: "Acme", org_id: ORG_UUID });
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        `https://relradar.ai/api/investigate?org_id=${ORG_UUID}`,
+      );
+      const body = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string);
+      expect((body as { org_id?: unknown }).org_id).toBeUndefined();
+    });
+  });
 });
